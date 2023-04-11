@@ -66,6 +66,7 @@
         </div>
         <div style="padding-top:10px;">
           <button class="scanButton">Scan Barcodes</button>
+          <span id="status"></span>
         </div>
       </div>
       
@@ -84,6 +85,118 @@
       <div class="scanner"></div>
     </div>
     <script>
+      let reader;
+      let enhancer;
+      let interval;
+      let processing = false;
+      window.onload = function() {
+        init();
+        document.getElementsByClassName("scanButton")[0].addEventListener("click",function(){
+          startScan();
+        });
+      }
+
+      async function init(){
+        updateStatus("Initializing...");
+        reader = await Dynamsoft.DBR.BarcodeScanner.createInstance();
+        await useEAN13Template();
+        enhancer = await Dynamsoft.DCE.CameraEnhancer.createInstance();
+        enhancer.on("played", (playCallbackInfo) => {
+          startProcessingLoop();
+        });
+        updateStatus("");
+        await enhancer.setUIElement(Dynamsoft.DCE.CameraEnhancer.defaultUIElementURL);
+        setScanRegion();
+        let container = document.getElementsByClassName("scanner")[0];
+        container.appendChild(enhancer.getUIElement());
+        document.getElementsByClassName("dce-btn-close")[0].onclick = function () {
+          stopScan();
+        };
+      }
+
+      function startScan(){
+        if (!enhancer || !reader) {
+          alert("Please wait for the initialization of Dynamsoft Barcode Reader");
+          return;
+        }
+        document.getElementsByClassName("scanner")[0].classList.add("active");
+        enhancer.open(true);
+      }
+
+      function stopScan(){
+        stopProcessingLoop();
+        enhancer.close(true);
+        document.getElementsByClassName("scanner")[0].classList.remove("active");
+      }
+
+      function updateStatus(info){
+        document.getElementById("status").innerText = info;
+      }
+
+      function setScanRegion(){
+        enhancer.setScanRegion({
+          regionLeft:0,
+          regionTop:25,
+          regionRight:100,
+          regionBottom:55,
+          regionMeasuredByPercentage: 1
+        });
+      }
+
+      async function useEAN13Template() {
+        await reader.initRuntimeSettingsWithString(`
+        {
+          "FormatSpecification": {
+            "Name": "defaultFormatParameterForAllBarcodeFormat"
+          },
+          "ImageParameter": {
+            "BarcodeFormatIds": ["BF_EAN_13"],
+            "BarcodeFormatIds_2": ["BF2_NULL"],
+            "ExpectedBarcodesCount": 1,
+            "FormatSpecificationNameArray": [
+              "defaultFormatParameterForAllBarcodeFormat"
+            ],
+            "Name": "default",
+            "Timeout": 3000
+          },
+          "Version": "3.0"
+        }`);
+      };
+
+      function startProcessingLoop(isBarcode){
+        stopProcessingLoop();
+        interval = setInterval(captureAndDecode,100); // read barcodes
+      }
+
+      function stopProcessingLoop(){
+        if (interval) {
+          clearInterval(interval);
+          interval = undefined;
+        }
+        processing = false;
+      }
+
+      async function captureAndDecode() {
+        if (!enhancer || !reader) {
+          return
+        }
+        if (enhancer.isOpen() === false) {
+          return;
+        }
+        if (processing == true) {
+          return;
+        }
+        processing = true; // set decoding to true so that the next frame will be skipped if the decoding has not completed.
+        let frame = enhancer.getFrame();
+        if (frame) {  
+          let results = await reader.decode(frame);
+          console.log(results);
+          if (results.length > 0) {
+            const result = results[0];
+          }
+          processing = false;
+        }
+      };
     </script>
   </body>
 </html>

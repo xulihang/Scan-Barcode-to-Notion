@@ -46,6 +46,14 @@
         width:75px;
         display: inline-block;
       }
+
+      .cover {
+        max-height:128px;
+      }
+
+      .coverCell {
+        text-align: center;
+      }
     </style>
   </head>
   <body>
@@ -77,6 +85,8 @@
               <th>Cover</th>
               <th>ISBN</th>
               <th>Title</th>
+              <th>Authors</th>
+              <th>Page Count</th>
               <th>Action</th>
             </tr>
           </table>
@@ -193,10 +203,67 @@
           console.log(results);
           if (results.length > 0) {
             const result = results[0];
+            let ISBN = result.barcodeText;
+            let jsonStr = await queryDetails(ISBN);
+            let jsonObj = JSON.parse(jsonStr);
+            let book = jsonObj.items[0];
+            let title = book['volumeInfo']['title'];
+            let authors = book['volumeInfo']['authors'].join(" ");
+            let pageCount = book['volumeInfo']['pageCount'];
+            let thumbnailLink = book['volumeInfo']['imageLinks']['thumbnail'];
+            let rowValues = [thumbnailLink,ISBN,title,authors,pageCount];
+            insertRow(rowValues);
+            stopScan();
           }
           processing = false;
         }
       };
+
+      function insertRow(rowValues){
+        let table = document.getElementsByClassName("results")[0];
+        let tr = document.createElement("tr");
+        for (let index = 0; index < rowValues.length; index++) {
+          const value = rowValues[index];
+          let td = document.createElement("td");
+          if (index === 0) {
+            let cover = document.createElement("img");
+            cover.className = "cover";
+            cover.src = value;
+            td.className = "coverCell";
+            td.appendChild(cover);
+          }else{
+            td.innerText = value;
+          }
+          tr.appendChild(td)
+        }
+        let td = document.createElement("td");
+        let sendButton = document.createElement("button");
+        sendButton.innerText = "Send to Notion";
+        sendButton.addEventListener("click",function(){
+          console.log("clicked");
+        });
+        td.appendChild(sendButton);
+        tr.appendChild(td);
+        table.appendChild(tr);
+      }
+
+      function queryDetails(isbn){
+        return new Promise(function (resolve, reject) {
+          let url = 'https://www.googleapis.com/books/v1/volumes?q=isbn:' + isbn;
+          console.log(url);
+          let xhr = new XMLHttpRequest();
+          xhr.open('GET', url);
+          xhr.onreadystatechange = function(){
+            if(xhr.readyState === 4){
+              resolve(xhr.responseText);
+            }
+          }
+          xhr.onerror = function(){
+            reject("error");
+          }
+          xhr.send();
+        });
+      }
     </script>
   </body>
 </html>

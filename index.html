@@ -215,21 +215,27 @@
         if (frame) {  
           let results = await reader.decode(frame);
           console.log(results);
-          if (results.length > 0) {
-            const result = results[0];
-            let ISBN = result.barcodeText;
-            let jsonStr = await queryDetails(ISBN);
-            let jsonObj = JSON.parse(jsonStr);
-            let book = jsonObj.items[0];
-            let title = book['volumeInfo']['title'];
-            let authors = book['volumeInfo']['authors'].join(" ");
-            let pageCount = book['volumeInfo']['pageCount'];
-            let thumbnailLink = book['volumeInfo']['imageLinks']['thumbnail'];
-            let rowValues = [thumbnailLink,title,authors,pageCount,ISBN];
-            insertRow(rowValues);
-            stopScan();
+          try {
+            if (results.length > 0) {
+              const result = results[0];
+              let ISBN = result.barcodeText;
+              let jsonStr = await queryDetails(ISBN);
+              let jsonObj = JSON.parse(jsonStr);
+              let book = jsonObj.items[0];
+              let title = book['volumeInfo']['title'];
+              let authors = book['volumeInfo']['authors'].join(" ");
+              let pageCount = book['volumeInfo']['pageCount'];
+              let thumbnailLink = book['volumeInfo']['imageLinks']['thumbnail'];
+              let rowValues = [thumbnailLink,title,authors,pageCount,ISBN];
+              insertRow(rowValues);
+              stopScan();
+            }
+            processing = false;  
+          } catch (error) {
+            alert("This book is not indexed.");
+            processing = false;
           }
-          processing = false;
+          
         }
       };
 

@@ -4,6 +4,8 @@ Notion integration of [Dynamsoft Barcode Reader](https://www.dynamsoft.com/barco
 
 It can work as a barcode scanner to scan books to a Notion database.
 
+Apply for a license to build your own integration: <https://www.dynamsoft.com/customer/license/trialLicense?product=dbr>
+
 [Online demo](https://notion-barcode-scanner.azurewebsites.net/)
 
 Demo video:

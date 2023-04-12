@@ -1,10 +1,5 @@
-from flask import Flask, request, send_file, render_template
-from PIL import Image
-import base64
-from io import BytesIO
-import base64
+from flask import Flask, request, send_file, make_response, render_template
 import os
-import time
 import json
 import requests
 app = Flask(__name__, template_folder='.', static_url_path='/', static_folder='./')
@@ -41,6 +36,19 @@ def get_book_info():
         return r.text
     else:
         return "No ISBN specified", 400
+        
+@app.route('/file', methods=['GET'])
+def get_file():
+    file_url = request.args.get('url', '')
+    if file_url != '':
+        r = requests.get(file_url)
+        response = make_response(r.content)
+        response.headers.set('Content-Type', 'image/jpeg')
+        response.headers.set(
+            'Content-Disposition', 'attachment', filename='cover.jpg')
+        return response
+    else:
+        return "No URL specified", 400
 
 if __name__ == '__main__':
     app.run(host = "0.0.0.0", port = 8888, ssl_context='adhoc')

@@ -241,7 +241,7 @@
           if (index === 0) {
             let cover = document.createElement("img");
             cover.className = "cover";
-            cover.src = value;
+            cover.src = "./file?url="+ encodeURIComponent(value);
             td.className = "coverCell";
             td.appendChild(cover);
           }else{

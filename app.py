@@ -19,8 +19,66 @@ def main():
 def send_to_notion():
     if request.method == 'POST':
         data = request.get_json()
-        if 'base64' in data:
-            print(data)
+        endpoint = "https://api.notion.com/v1/pages"
+        thumbnailLink = data["thumbnailLink"]
+        title = data["title"]
+        authors = data["authors"]
+        pageCount = data["pageCount"]
+        ISBN = data["ISBN"]
+        headers = {
+                    'Authorization': 'Bearer ',
+                    'Content-Type': 'application/json',
+                    'Notion-Version': '2022-06-28'
+                  }
+        payload = {
+          "parent": { "database_id": "59a1248392334f34bc14a4abdbfa94df" },
+          "cover": {
+            "type": "external",
+            "external": {
+              "url": thumbnailLink
+            }
+          },
+          "properties": {
+            "Name": {
+              "title": [
+                {
+                  "text": {
+                    "content": title
+                  }
+                }
+              ]
+            },
+            "Authors": {
+              "rich_text": [
+                {
+                  "text": {
+                    "content": authors
+                  }
+                }
+              ]
+            },
+            "ISBN": {
+              "rich_text": [
+                {
+                  "text": {
+                    "content": ISBN
+                  }
+                }
+              ]
+            },
+            "Page Count": {
+              "rich_text": [
+                {
+                  "text": {
+                    "content": pageCount
+                  }
+                }
+              ]
+            }
+          }
+        }
+        r = requests.post(endpoint, data=payload, headers=headers)
+        print(r)
     else:
         return "Method not allowed", 400
         

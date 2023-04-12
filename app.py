@@ -37,6 +37,16 @@ def get_book_info():
     else:
         return "No ISBN specified", 400
         
+@app.route('/doubanbook', methods=['GET'])
+def get_doubanbook_info():
+    ISBN = request.args.get('isbn', '')
+    if ISBN != '':
+        URL = 'https://linmi.cc/book?isbn='+ISBN
+        r = requests.get(URL)
+        return r.text
+    else:
+        return "No ISBN specified", 400
+        
 @app.route('/file', methods=['GET'])
 def get_file():
     file_url = request.args.get('url', '')

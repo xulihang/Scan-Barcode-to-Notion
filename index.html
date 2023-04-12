@@ -220,27 +220,53 @@
         if (frame) {  
           let results = await reader.decode(frame);
           console.log(results);
-          try {
+
             if (results.length > 0) {
               const result = results[0];
               let ISBN = result.barcodeText;
-              let jsonStr = await queryDetails(ISBN);
-              let jsonObj = JSON.parse(jsonStr);
-              let book = jsonObj.items[0];
-              let title = book['volumeInfo']['title'];
-              let authors = book['volumeInfo']['authors'].join(" ");
-              let pageCount = book['volumeInfo']['pageCount'];
-              let thumbnailLink = book['volumeInfo']['imageLinks']['thumbnail'];
-              let rowValues = [thumbnailLink,title,authors,pageCount,ISBN];
-              insertRow(rowValues);
-              stopScan();
+              let book;
+              let title;
+              let authors;
+              let pageCount;
+              let thumbnailLink;
+              try {
+                let jsonStr = await queryDetails(ISBN);
+                let jsonObj = JSON.parse(jsonStr);
+                let totalItems = jsonObj['totalItems'];
+                console.log(jsonStr);
+                if (totalItems > 0) {
+                  book = jsonObj.items[0];
+                  title = book['volumeInfo']['title'];
+                  authors = book['volumeInfo']['authors'].join();
+                  pageCount = book['volumeInfo']['pageCount'];
+                  thumbnailLink = book['volumeInfo']['imageLinks']['thumbnail'];
+                }
+              } catch (error) {
+                console.log(error)
+              }
+              if (!title || !authors || !thumbnailLink || !pageCount) {
+                try {
+                  jsonStr = await queryDetailsUsingDouban(ISBN);
+                  jsonObj = JSON.parse(jsonStr);
+                  if (jsonObj['title'] != null) {
+                    title = jsonObj['title'];
+                    authors = jsonObj['author'][0]['name'];
+                    pageCount = jsonObj['page'];
+                    thumbnailLink = jsonObj['logo'];
+                  }
+                } catch (error) {
+                  console.log(error)
+                }
+              }
+              if (title) {
+                let rowValues = [thumbnailLink,title,authors,pageCount,ISBN];
+                insertRow(rowValues);
+                stopScan();
+              } else {
+                alert("This book is not indexed.");
+              }
             }
             processing = false;  
-          } catch (error) {
-            alert("This book is not indexed.");
-            processing = false;
-          }
-          
         }
       };
 
@@ -276,6 +302,23 @@
         return new Promise(function (resolve, reject) {
           let url = './book?isbn=' + isbn;
           console.log(url);
+          let xhr = new XMLHttpRequest();
+          xhr.open('GET', url);
+          xhr.onreadystatechange = function(){
+            if(xhr.readyState === 4) {
+              resolve(xhr.responseText);
+            }
+          }
+          xhr.onerror = function(){
+            reject("error");
+          }
+          xhr.send();
+        });
+      }
+
+      function queryDetailsUsingDouban(isbn){
+        return new Promise(function (resolve, reject) {
+          let url = './doubanbook?isbn=' + isbn;
           let xhr = new XMLHttpRequest();
           xhr.open('GET', url);
           xhr.onreadystatechange = function(){

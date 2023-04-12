@@ -342,6 +342,7 @@
         xhr.onreadystatechange = function(){
           if(xhr.readyState === 4){
             console.log(xhr.responseText);
+            alert("Sent");
           }
         }
         xhr.onerror = function(){

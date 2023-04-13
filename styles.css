@@ -1,0 +1,48 @@
+.scanner {
+  display: none;
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+}
+.scanner.active {
+  display: block;
+}
+.app {
+  display: flex;
+  flex-direction: column;
+  width: calc(100% - 40px);
+  padding-left: 20px;
+  padding-right: 20px;
+}
+
+.fullwidth {
+  width: 100%;
+}
+
+table {
+  border-collapse: collapse;
+}
+
+table, th, td {
+  border: 1px solid black;
+}
+
+.resultContainer {
+  padding-top: 1em;
+  overflow: auto;
+}
+
+label{
+  width:75px;
+  display: inline-block;
+}
+
+.cover {
+  max-height:128px;
+}
+
+.coverCell {
+  text-align: center;
+}
